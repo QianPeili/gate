@@ -37,7 +37,7 @@ func (h *Host) Delete(pattern string) {
 	h.m.Delete(pattern)
 }
 
-func (h *Host) Handle(w http.ResponseWriter, r *http.Request) {
+func (h *Host) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if handler, _ := h.m.Match(r.RequestURI); handler != nil {
 		handler.(http.Handler).ServeHTTP(w, r)
 		return
@@ -66,9 +66,9 @@ func (g *Gate) Delete(pattern string) {
 	g.m.Delete(pattern)
 }
 
-func (g *Gate) Handle(w http.ResponseWriter, r *http.Request) {
+func (g *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if host, _ := g.m.Match(r.Host); host != nil {
-		host.(*Host).Handle(w, r)
+		host.(*Host).ServeHTTP(w, r)
 		return
 	}
 
