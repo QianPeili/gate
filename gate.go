@@ -52,7 +52,7 @@ type Gate struct {
 
 func NewGate() *Gate {
 	m := mux.New()
-	m.Matcher = mux.SuffixMatch
+	m.Matcher = hostMatch
 	return &Gate{
 		m: m,
 	}
@@ -73,4 +73,21 @@ func (g *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.NotFound(w, r)
+}
+
+func hostMatch(pattern, s string, index int) (ok bool, score int) {
+	n := len(pattern)
+
+	// "*" matches all hosts
+	if pattern == "*" {
+		return true, n
+	}
+
+	// deal with *.example.com
+	if n > 2 && pattern[:2] == "*." {
+		// matches example.com or xyz.example.com
+		return s == pattern[2:] || strings.HasSuffix(s, pattern[1:]), n
+	}
+
+	return s == pattern, n
 }
