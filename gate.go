@@ -38,7 +38,7 @@ func (h *Host) Delete(pattern string) {
 }
 
 func (h *Host) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if handler, _ := h.m.Match(r.RequestURI); handler != nil {
+	if handler := h.m.Match(r.RequestURI); handler != nil {
 		handler.(http.Handler).ServeHTTP(w, r)
 		return
 	}
@@ -51,10 +51,11 @@ type Gate struct {
 }
 
 func NewGate() *Gate {
-	m := mux.New()
-	m.Matcher = hostMatch
 	return &Gate{
-		m: m,
+		m: mux.New(mux.Config{
+			TrimPattern: hostTrim,
+			Matcher:     hostMatch,
+		}),
 	}
 }
 
@@ -67,12 +68,24 @@ func (g *Gate) Delete(pattern string) {
 }
 
 func (g *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if host, _ := g.m.Match(r.Host); host != nil {
+	if host := g.m.Match(r.Host); host != nil {
 		host.(*Host).ServeHTTP(w, r)
 		return
 	}
 
 	http.NotFound(w, r)
+}
+
+func hostTrim(s string) string {
+	if n := strings.Index(s, "://"); n >= 0 {
+		s = s[n+3:]
+	}
+
+	if n := strings.IndexAny(s, ":/"); n >= 0 {
+		s = s[:n]
+	}
+
+	return s
 }
 
 func hostMatch(pattern, s string, index int) (ok bool, score int) {
@@ -83,9 +96,8 @@ func hostMatch(pattern, s string, index int) (ok bool, score int) {
 		return true, n
 	}
 
-	// deal with *.example.com
+	// *.example.com matches example.com or xyz.example.com
 	if n > 2 && pattern[:2] == "*." {
-		// matches example.com or xyz.example.com
 		return s == pattern[2:] || strings.HasSuffix(s, pattern[1:]), n
 	}
 
