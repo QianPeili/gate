@@ -37,6 +37,10 @@ func (h *Host) Delete(pattern string) {
 	h.m.Delete(pattern)
 }
 
+func (h *Host) Clear() {
+	h.m.Clear()
+}
+
 func (h *Host) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if handler := h.m.Match(r.RequestURI); handler != nil {
 		handler.(http.Handler).ServeHTTP(w, r)
@@ -65,6 +69,10 @@ func (g *Gate) Map(pattern string, h *Host) {
 
 func (g *Gate) Delete(pattern string) {
 	g.m.Delete(pattern)
+}
+
+func (g *Gate) Clear() {
+	g.m.Clear()
 }
 
 func (g *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
