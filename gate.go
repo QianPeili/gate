@@ -104,6 +104,14 @@ func hostMatch(pattern, s string, index int) (ok bool, score int) {
 		return true, n
 	}
 
+	// "example.com:*" matches all ports
+	if strings.HasSuffix(pattern, ":*") {
+		pattern = strings.TrimSuffix(pattern, ":*")
+		if n := strings.LastIndex(s, ":"); n > 0 {
+			s = s[:n]
+		}
+	}
+
 	// *.example.com matches example.com or xyz.example.com
 	if n > 2 && pattern[:2] == "*." {
 		return s == pattern[2:] || strings.HasSuffix(s, pattern[1:]), n
