@@ -89,7 +89,7 @@ func hostTrim(s string) string {
 		s = s[n+3:]
 	}
 
-	if n := strings.IndexAny(s, ":/"); n >= 0 {
+	if n := strings.IndexAny(s, "/"); n >= 0 {
 		s = s[:n]
 	}
 
